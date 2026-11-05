@@ -72,10 +72,13 @@ class WorkspaceScreen extends ConsumerWidget {
                   },
                 ),
               if (user.role == UserRole.employee) ...[
-                const ListTile(
-                  enabled: false,
-                  title: Text('Lịch của tôi'),
-                  subtitle: Text('Sắp có'),
+                ListTile(
+                  leading: const Icon(Icons.calendar_month_outlined),
+                  title: const Text('Lịch của tôi'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/my-schedule');
+                  },
                 ),
                 const ListTile(
                   enabled: false,
