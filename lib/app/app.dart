@@ -7,6 +7,7 @@ import '../features/auth/domain/auth.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
 import 'workspace_screen.dart';
+import '../features/schedule/presentation/schedule_screen.dart';
 
 class ShiftSyncApp extends ConsumerStatefulWidget {
   const ShiftSyncApp({super.key});
@@ -40,13 +41,18 @@ class _ShiftSyncAppState extends ConsumerState<ShiftSyncApp> {
         if (path == '/management' && role == UserRole.employee) {
           return '/forbidden';
         }
-        if (path == '/employee' && role != UserRole.employee) {
+        if (['/employee', '/my-schedule'].contains(path) &&
+            role != UserRole.employee) {
           return '/forbidden';
         }
         return null;
       },
       routes: [
         GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
+        GoRoute(
+          path: '/my-schedule',
+          builder: (_, _) => const ScheduleScreen(),
+        ),
         GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
         GoRoute(
           path: '/splash',
