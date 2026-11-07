@@ -112,10 +112,13 @@ class WorkspaceScreen extends ConsumerWidget {
                   title: Text('Lịch làm việc'),
                   subtitle: Text('Sắp có'),
                 ),
-                const ListTile(
-                  enabled: false,
-                  title: Text('Bảng công'),
-                  subtitle: Text('Sắp có'),
+                ListTile(
+                  leading: const Icon(Icons.fact_check_outlined),
+                  title: const Text('Bảng công'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/attendance');
+                  },
                 ),
                 const ListTile(
                   enabled: false,
