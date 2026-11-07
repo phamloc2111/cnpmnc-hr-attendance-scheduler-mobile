@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/auth/domain/auth.dart';
 import '../features/auth/presentation/auth_controller.dart';
+import '../features/auth/presentation/change_password_dialog.dart';
 import 'services.dart';
 
 final workspaceProvider = FutureProvider.autoDispose
@@ -27,6 +28,16 @@ final workspaceProvider = FutureProvider.autoDispose
 class WorkspaceScreen extends ConsumerWidget {
   const WorkspaceScreen({super.key, required this.endpoint});
   final String endpoint;
+
+  Future<void> _changePassword(BuildContext context) async {
+    final changed = await showChangePasswordDialog(context);
+    if (changed && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đổi mật khẩu thành công.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
@@ -37,6 +48,11 @@ class WorkspaceScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('ShiftSync'),
         actions: [
+          IconButton(
+            tooltip: 'Đổi mật khẩu',
+            onPressed: auth.loading ? null : () => _changePassword(context),
+            icon: const Icon(Icons.key_outlined),
+          ),
           IconButton(
             tooltip: 'Đăng xuất',
             onPressed: auth.loading
@@ -120,6 +136,15 @@ class WorkspaceScreen extends ConsumerWidget {
                   subtitle: Text('Sắp có'),
                 ),
               ],
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.lock_outline),
+                title: const Text('Đổi mật khẩu'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _changePassword(context);
+                },
+              ),
             ],
           ),
         ),

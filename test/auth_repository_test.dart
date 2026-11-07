@@ -128,6 +128,45 @@ void main() {
     );
   });
 
+  test('changePassword sends authenticated payload and preserves session on wrong current password', () async {
+    await store.write(
+      jsonEncode({
+        'accessToken': 'jwt',
+        'expiresAt': DateTime.now()
+            .add(const Duration(hours: 1))
+            .toUtc()
+            .toIso8601String(),
+      }),
+    );
+    RequestOptions? captured;
+    dio.httpClientAdapter = TestAdapter((request) {
+      captured = request;
+      return ResponseBody.fromString('', 204);
+    });
+    await repo.changePassword('OldPass123!', 'NewPass8');
+    expect(captured!.path, '/auth/change-password');
+    expect(captured!.headers['Authorization'], 'Bearer jwt');
+    expect(captured!.data, {
+      'currentPassword': 'OldPass123!',
+      'newPassword': 'NewPass8',
+    });
+
+    dio.httpClientAdapter = TestAdapter(
+      (_) => jsonBody({'message': 'Mật khẩu cũ không đúng'}, 400),
+    );
+    await expectLater(
+      repo.changePassword('wrong', 'NewPass8'),
+      throwsA(
+        isA<AuthFailure>().having(
+          (error) => error.message,
+          'message',
+          'Mật khẩu cũ không đúng',
+        ),
+      ),
+    );
+    expect(store.value, isNotNull);
+  });
+
   test('logout clears token even if server is unreachable', () async {
     await store.write(
       jsonEncode({

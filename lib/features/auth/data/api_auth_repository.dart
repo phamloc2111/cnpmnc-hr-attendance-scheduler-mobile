@@ -84,6 +84,24 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      await client.dio.post<void>(
+        '/auth/change-password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
+      );
+    } on DioException catch (error) {
+      throw _failure(error);
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       await client.dio.post<void>('/auth/logout');

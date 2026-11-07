@@ -42,6 +42,7 @@ abstract interface class AuthRepository {
   Stream<void> get expired;
   Future<AuthSession?> restore();
   Future<AuthSession> login(String email, String password);
+  Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> logout();
   Future<void> clear();
 }
