@@ -87,6 +87,13 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) => ref
+      .read(authRepositoryProvider)
+      .changePassword(currentPassword, newPassword);
+
   Future<void> logout() async {
     if (state.loading) return;
     state = AuthState(session: state.session, loading: true);

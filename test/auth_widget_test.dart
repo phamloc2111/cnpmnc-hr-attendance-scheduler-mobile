@@ -13,10 +13,13 @@ class FakeAuthRepository implements AuthRepository {
     this.role = UserRole.employee,
     this.failLogin = false,
     this.restoreFails = false,
+    this.currentPassword = 'password-123',
   });
   final UserRole role;
   final bool failLogin;
   bool restoreFails;
+  String currentPassword;
+  String? changedTo;
   bool loggedOut = false;
   final events = StreamController<void>.broadcast();
   @override
@@ -34,6 +37,18 @@ class FakeAuthRepository implements AuthRepository {
       AppUser(id: '1', email: email, displayName: 'Nguyễn An', role: role),
       DateTime.now().add(const Duration(hours: 1)),
     );
+  }
+
+  @override
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    if (currentPassword != this.currentPassword) {
+      throw const AuthFailure('Mật khẩu cũ không đúng');
+    }
+    this.currentPassword = newPassword;
+    changedTo = newPassword;
   }
 
   @override
@@ -199,4 +214,52 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets(
+    'SS-14 change password succeeds with valid current password and 8+ char new password',
+    (tester) async {
+      final repo = FakeAuthRepository(currentPassword: 'password-123');
+      await start(tester, repo);
+      await login(tester);
+      await tester.tap(find.byTooltip('Đổi mật khẩu'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu cũ'),
+        'password-123',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu mới'),
+        'NewPass8',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Lưu'));
+      await tester.pumpAndSettle();
+      expect(repo.changedTo, 'NewPass8');
+      expect(find.text('Đổi mật khẩu thành công.'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'SS-14 change password shows error and does not change when current password is wrong',
+    (tester) async {
+      final repo = FakeAuthRepository(currentPassword: 'password-123');
+      await start(tester, repo);
+      await login(tester);
+      await tester.tap(find.byTooltip('Đổi mật khẩu'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu cũ'),
+        'wrong-old',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu mới'),
+        'NewPass8',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Lưu'));
+      await tester.pumpAndSettle();
+      expect(repo.changedTo, isNull);
+      expect(find.text('Mật khẩu cũ không đúng'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
