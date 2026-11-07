@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/attendance/presentation/attendance_screen.dart';
 import '../features/auth/domain/auth.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -38,7 +39,7 @@ class _ShiftSyncAppState extends ConsumerState<ShiftSyncApp> {
         if (path == '/administration' && role != UserRole.admin) {
           return '/forbidden';
         }
-        if (path == '/management' && role == UserRole.employee) {
+        if (['/management', '/attendance'].contains(path) && role == UserRole.employee) {
           return '/forbidden';
         }
         if (['/employee', '/my-schedule'].contains(path) &&
@@ -53,6 +54,7 @@ class _ShiftSyncAppState extends ConsumerState<ShiftSyncApp> {
           path: '/my-schedule',
           builder: (_, _) => const ScheduleScreen(),
         ),
+        GoRoute(path: '/attendance', builder: (_, _) => const AttendanceScreen()),
         GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
         GoRoute(
           path: '/splash',
