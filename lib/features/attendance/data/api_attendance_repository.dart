@@ -44,6 +44,10 @@ class ApiAttendanceRepository implements AttendanceRepository {
               deviceLocation: item['deviceLocation'] as String,
               deviceLatitude: (item['deviceLatitude'] as num?)?.toDouble(),
               deviceLongitude: (item['deviceLongitude'] as num?)?.toDouble(),
+              deviceId: item['deviceId'] as String?,
+              deviceName: item['deviceName'] as String?,
+              mockLocation: item['mockLocation'] == true,
+              fraudType: FraudType.fromCode(item['fraudType']),
               status: AttendanceStatus.fromCode(item['status']),
               verificationNote: item['verificationNote'] as String?,
             ),
@@ -65,6 +69,30 @@ class ApiAttendanceRepository implements AttendanceRepository {
       throw const AttendanceFailure('Dữ liệu điểm danh không hợp lệ.');
     } on TypeError {
       throw const AttendanceFailure('Dữ liệu điểm danh không hợp lệ.');
+    }
+  }
+
+  @override
+  Future<void> registerDevice({
+    required String employeeId,
+    required String deviceId,
+    String? deviceName,
+  }) async {
+    try {
+      await client.dio.put<Map<String, Object?>>(
+        '/attendance-records/devices/$employeeId',
+        data: <String, Object?>{
+          'deviceId': deviceId,
+          'deviceName': deviceName,
+        },
+      );
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      throw AttendanceFailure(
+        data is Map<String, Object?> && data['message'] is String
+            ? data['message'] as String
+            : 'Không thể đăng ký lại thiết bị.',
+      );
     }
   }
 }

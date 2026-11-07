@@ -29,6 +29,25 @@ enum AttendanceStatus {
   );
 }
 
+enum FraudType {
+  stalePhoto('STALE_PHOTO', 'Từ chối: Ảnh cũ'),
+  duplicatePhoto('DUPLICATE_PHOTO', 'Từ chối: Ảnh dùng lại'),
+  fakeLocation('FAKE_LOCATION', 'Cảnh báo: Định vị giả'),
+  unregisteredDevice('UNREGISTERED_DEVICE', 'Từ chối: Thiết bị lạ');
+
+  const FraudType(this.code, this.label);
+  final String code;
+  final String label;
+
+  static FraudType? fromCode(Object? code) {
+    if (code == null) return null;
+    for (final item in values) {
+      if (item.code == code) return item;
+    }
+    return null;
+  }
+}
+
 class AttendanceRecord {
   const AttendanceRecord({
     required this.id,
@@ -46,6 +65,10 @@ class AttendanceRecord {
     this.photoCapturedAt,
     this.deviceLatitude,
     this.deviceLongitude,
+    this.deviceId,
+    this.deviceName,
+    this.mockLocation = false,
+    this.fraudType,
     this.verificationNote,
   });
 
@@ -63,6 +86,10 @@ class AttendanceRecord {
   final String deviceLocation;
   final double? deviceLatitude;
   final double? deviceLongitude;
+  final String? deviceId;
+  final String? deviceName;
+  final bool mockLocation;
+  final FraudType? fraudType;
   final AttendanceStatus status;
   final String? verificationNote;
 }
@@ -84,5 +111,11 @@ abstract interface class AttendanceRepository {
     int page = 0,
     AttendanceStatus? status,
     AttendanceType? checkType,
+  });
+
+  Future<void> registerDevice({
+    required String employeeId,
+    required String deviceId,
+    String? deviceName,
   });
 }

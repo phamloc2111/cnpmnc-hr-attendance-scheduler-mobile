@@ -26,8 +26,12 @@ final attendanceJson = <String, Object?>{
   'deviceLocation': '268 Lý Thường Kiệt, Phường 14, Quận 10',
   'deviceLatitude': 10.7726,
   'deviceLongitude': 106.6579,
-  'status': 'ON_TIME',
-  'verificationNote': 'Khớp vị trí và thời gian trên ảnh Timemark',
+  'deviceId': 'device-iphone-14',
+  'deviceName': 'iPhone 14 của An',
+  'mockLocation': true,
+  'fraudType': 'FAKE_LOCATION',
+  'status': 'REJECTED',
+  'verificationNote': 'Cảnh báo gian lận: Phát hiện dấu hiệu định vị giả (Mock GPS) — đã báo cho quản lý',
 };
 
 class FakeAttendanceRepository implements AttendanceRepository {
@@ -52,7 +56,11 @@ class FakeAttendanceRepository implements AttendanceRepository {
           deviceLocation: '268 Lý Thường Kiệt, Phường 14, Quận 10',
           deviceLatitude: 10.7726,
           deviceLongitude: 106.6579,
-          status: AttendanceStatus.onTime,
+          deviceId: 'device-iphone-14',
+          deviceName: 'iPhone 14 của An',
+          mockLocation: true,
+          fraudType: FraudType.fakeLocation,
+          status: AttendanceStatus.rejected,
           verificationNote: 'Khớp vị trí và thời gian trên ảnh Timemark',
         ),
       ],
@@ -60,10 +68,17 @@ class FakeAttendanceRepository implements AttendanceRepository {
       1,
     );
   }
+
+  @override
+  Future<void> registerDevice({
+    required String employeeId,
+    required String deviceId,
+    String? deviceName,
+  }) async {}
 }
 
 void main() {
-  test('ApiAttendanceRepository decodes attendance records and sends filters', () async {
+  test('ApiAttendanceRepository decodes attendance records, fraudType and registers device', () async {
     final dio = Dio(BaseOptions(baseUrl: 'https://test.invalid/api/v1'));
     final client = ApiClient(MemoryTokenStore(), dio: dio);
     addTearDown(client.dispose);
@@ -71,6 +86,15 @@ void main() {
     late RequestOptions sent;
     dio.httpClientAdapter = TestAdapter((request) {
       sent = request;
+      if (request.method == 'PUT') {
+        return jsonBody({
+          'employeeId': 'emp-1',
+          'employeeName': 'Nguyễn An',
+          'deviceId': 'device-s24',
+          'deviceName': 'Samsung S24',
+          'registeredAt': '2026-11-07T01:00:00Z',
+        });
+      }
       return jsonBody({
         'items': [attendanceJson],
         'page': 0,
@@ -80,22 +104,23 @@ void main() {
 
     final result = await repo.list(
       page: 0,
-      status: AttendanceStatus.onTime,
+      status: AttendanceStatus.rejected,
       checkType: AttendanceType.checkIn,
     );
     expect(sent.path, '/attendance-records');
-    expect(sent.queryParameters, {
-      'page': 0,
-      'size': 20,
-      'status': 'ON_TIME',
-      'checkType': 'CHECK_IN',
-    });
     expect(result.items.single.employeeName, 'Nguyễn An');
-    expect(result.items.single.photoLocation, '268 Lý Thường Kiệt, Quận 10');
-    expect(result.items.single.status, AttendanceStatus.onTime);
+    expect(result.items.single.fraudType, FraudType.fakeLocation);
+    expect(result.items.single.deviceId, 'device-iphone-14');
+
+    await repo.registerDevice(
+      employeeId: 'emp-1',
+      deviceId: 'device-s24',
+      deviceName: 'Samsung S24',
+    );
+    expect(sent.path, '/attendance-records/devices/emp-1');
   });
 
-  testWidgets('AttendanceScreen shows photo, photo location, device location and status', (
+  testWidgets('AttendanceScreen shows photo, location, device, fraud alert and privacy notice', (
     tester,
   ) async {
     final auth = FakeAuthRepository();
@@ -118,22 +143,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Nguyễn An'), findsOneWidget);
+    expect(find.text('Cảnh báo: Định vị giả'), findsOneWidget);
+    expect(find.text('Thiết bị: iPhone 14 của An'), findsOneWidget);
     expect(
-      find.text('Ảnh Timemark: https://example.com/timemark/checkin-an.jpg'),
-      findsOneWidget,
-    );
-    expect(
-      find.text('Vị trí trên ảnh: 268 Lý Thường Kiệt, Quận 10'),
-      findsOneWidget,
-    );
-    expect(
-      find.text(
-        'Định vị điện thoại: 268 Lý Thường Kiệt, Phường 14, Quận 10 (10.7726, 106.6579)',
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.text('Ghi chú: Khớp vị trí và thời gian trên ảnh Timemark'),
+      find.textContaining('Chỉ lấy vị trí tại thời điểm chấm công, không theo dõi liên tục.'),
       findsOneWidget,
     );
     await tester.pumpWidget(const SizedBox.shrink());

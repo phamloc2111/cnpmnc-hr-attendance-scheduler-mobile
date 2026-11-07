@@ -56,6 +56,12 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       ),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(
+              'Chống gian lận: Chặn ảnh cũ, ảnh dùng lại, định vị giả và thiết bị lạ · Chỉ lấy vị trí tại thời điểm chấm công, không theo dõi liên tục.',
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
@@ -225,6 +231,16 @@ class _AttendanceCard extends StatelessWidget {
                 Chip(label: Text(record.status.label)),
               ],
             ),
+            if (record.fraudType != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                record.fraudType!.label,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
             Text(
               '${record.workDate} · ${record.shiftName} · ${record.checkType.label} ($timeText)',
             ),
@@ -239,6 +255,8 @@ class _AttendanceCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text('Vị trí trên ảnh: ${record.photoLocation}'),
             Text('Định vị điện thoại: ${record.deviceLocation}$coords'),
+            if (record.deviceName != null || record.deviceId != null)
+              Text('Thiết bị: ${record.deviceName ?? record.deviceId}'),
             if (record.verificationNote != null &&
                 record.verificationNote!.isNotEmpty) ...[
               const SizedBox(height: 4),
