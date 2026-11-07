@@ -24,6 +24,9 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
   final _current = TextEditingController();
   final _next = TextEditingController();
   final _confirm = TextEditingController();
+  bool _showCurrent = false;
+  bool _showNext = false;
+  bool _showConfirm = false;
   bool _saving = false;
   String? _error;
 
@@ -70,10 +73,22 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
             TextFormField(
               controller: _current,
               enabled: !_saving,
-              obscureText: true,
+              obscureText: !_showCurrent,
               autocorrect: false,
               enableSuggestions: false,
-              decoration: const InputDecoration(labelText: 'Mật khẩu cũ'),
+              decoration: InputDecoration(
+                labelText: 'Mật khẩu cũ',
+                suffixIcon: IconButton(
+                  tooltip: _showCurrent
+                      ? 'Ẩn mật khẩu cũ'
+                      : 'Hiện mật khẩu cũ',
+                  icon: Icon(
+                    _showCurrent ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () =>
+                      setState(() => _showCurrent = !_showCurrent),
+                ),
+              ),
               validator: (value) => value == null || value.isEmpty
                   ? 'Vui lòng nhập mật khẩu cũ'
                   : null,
@@ -82,12 +97,21 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
             TextFormField(
               controller: _next,
               enabled: !_saving,
-              obscureText: true,
+              obscureText: !_showNext,
               autocorrect: false,
               enableSuggestions: false,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Mật khẩu mới',
                 helperText: 'Ít nhất 8 ký tự, tối đa 72 byte UTF-8',
+                suffixIcon: IconButton(
+                  tooltip: _showNext
+                      ? 'Ẩn mật khẩu mới'
+                      : 'Hiện mật khẩu mới',
+                  icon: Icon(
+                    _showNext ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () => setState(() => _showNext = !_showNext),
+                ),
               ),
               validator: (value) {
                 if (value == null ||
@@ -103,11 +127,21 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
             TextFormField(
               controller: _confirm,
               enabled: !_saving,
-              obscureText: true,
+              obscureText: !_showConfirm,
               autocorrect: false,
               enableSuggestions: false,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Xác nhận mật khẩu mới',
+                suffixIcon: IconButton(
+                  tooltip: _showConfirm
+                      ? 'Ẩn xác nhận mật khẩu mới'
+                      : 'Hiện xác nhận mật khẩu mới',
+                  icon: Icon(
+                    _showConfirm ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () =>
+                      setState(() => _showConfirm = !_showConfirm),
+                ),
               ),
               validator: (value) =>
                   value != null && value.isNotEmpty && value != _next.text
