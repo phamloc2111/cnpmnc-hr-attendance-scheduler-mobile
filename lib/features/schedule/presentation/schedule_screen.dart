@@ -114,7 +114,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               'Giờ Việt Nam (UTC+7) · Ngày làm việc là ngày bắt đầu ca.',
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Expanded(
             child: result.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -141,13 +141,51 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
               ),
               data: (data) => Column(
                 children: [
+                  // Thẻ điểm ưu tiên tuần của nhân viên (US28)
+                  if (data.priority != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEDF4E8),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFC7DEC4)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.stars, color: Color(0xFF245D49), size: 28),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Điểm ưu tiên tuần này: ${data.priority!.score}/100',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF182B20),
+                                    ),
+                                  ),
+                                  Text(
+                                    data.priority!.reason ?? 'Điểm xếp ca dựa trên chuyên cần và dữ liệu chấm công',
+                                    style: const TextStyle(fontSize: 12, color: Color(0xFF687A70)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   Expanded(
                     child: data.items.isEmpty
                         ? const Center(
                             child: Padding(
                               padding: EdgeInsets.all(24),
                               child: Text(
-                                'Chưa có lịch trong tuần này. Lịch sẽ xuất hiện khi quản lý phân ca cho bạn.',
+                                'Chưa có lịch được công bố trong tuần này. Lịch sẽ xuất hiện khi quản lý công bố phân ca cho bạn.',
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           )
@@ -220,10 +258,24 @@ class _ScheduleCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              localizations.formatFullDate(
-                DateTime.parse('${schedule.workDate}T00:00:00Z'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  localizations.formatFullDate(
+                    DateTime.parse('${schedule.workDate}T00:00:00Z'),
+                  ),
+                ),
+                if (schedule.requiredPosition != null && schedule.requiredPosition!.isNotEmpty)
+                  Chip(
+                    label: Text(
+                      schedule.requiredPosition!,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
